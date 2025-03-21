@@ -3,7 +3,8 @@ extends Node2D
 const NUM_STRINGS = 6
 const NUM_FRETS = 22  # Standard fretboard length
 const STRING_SPACING = 20	# Adjust this for proper spacing
-const FRET_SPACING = 50		# Adjust for fret width
+#const FRET_SPACING = 50		# Adjust for fret width
+const SCALE_LENGTH = 75 # Arbitrary, adjust for screen size
 
 func _ready():
 	draw_fretboard()
@@ -16,10 +17,14 @@ func draw_fretboard():
 		var string_row = HBoxContainer.new()	# Holds frets for this string
 		fretboard_container.add_child(string_row)
 		
-		for fret_index in range(NUM_FRETS+1):
+		for fret_index in range(NUM_FRETS):
 			var fret_button = Button.new()
 			fret_button.text = str(fret_index+1)
 			fret_button.name = "String%d_Fret%d" % [string_index+1, fret_index+1]
+
+			# Calculate dynamic width using the formula
+			var fret_width = SCALE_LENGTH / (2 **(fret_index / 12.0))
+			fret_button.custom_minimum_size = Vector2(fret_width, STRING_SPACING)
 
 			# Store data for note mapping
 			fret_button.set_meta("string", string_index+1)
