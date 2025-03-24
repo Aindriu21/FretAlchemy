@@ -8,12 +8,34 @@ const NUT_WIDTH = 0.125  # Adjust as needed for better proportions
 var scale_length  # Will be updated dynamically
 var fretboard_container
 
+var tunings = {
+	"Standard": ["E", "A", "D", "G", "B", "E"],
+	#"Standard": ["E", "B", "G", "D", "A", "E"],  # Standard tuning (6th to 1st string)
+	"Drop D": ["D", "A", "D", "G", "B", "E"],
+	"Open G": ["D", "G", "D", "G", "B", "D"]
+}
+var current_tuning = tunings["Standard"]  # Default to standard tuning
+var display_mode = "numbers"  # "numbers" or "notes"
+
+
 func _ready():
 	update_scale_length()
 
 	# Initialize the container for the fretboard
 	fretboard_container = VBoxContainer.new()
 	add_child(fretboard_container)
+	
+	var tuning_menu = OptionButton.new()
+	add_child(tuning_menu)
+	for tuning in tunings.keys():
+		tuning_menu.add_item(tuning)
+	tuning_menu.connect("item_selected", _on_tuning_selected)
+	
+	var toggle_button = Button.new()
+	toggle_button.text = "Switch Labels"
+	add_child(toggle_button)
+	
+	toggle_button.connect("pressed", _on_toggle_labels)
 	
 	draw_fretboard()
 	get_viewport().connect("size_changed", _on_resize)  # Detect window resizing
@@ -35,18 +57,20 @@ func draw_fretboard():
 
 		for fret_index in range(NUM_FRETS+1):
 			var fret_button = Button.new()
-			fret_button.text = str(fret_index)
 			fret_button.name = "String%d_Fret%d" % [string_index, fret_index]
-
+			
+			# Get the correct label based on the display mode
+			var label = get_fret_label(string_index, fret_index)
+			fret_button.text = label  # Assign correct label
+			
 			# Use the real-world fret spacing formula:
 			var fret_x = scale_length - (scale_length / (2 ** (fret_index / 12.0)))
 			var fret_width = fret_x - previous_fret_x
 			previous_fret_x = fret_x  # Update the last fret position
 
 			fret_button.custom_minimum_size = Vector2(fret_width, STRING_SPACING - 5)
-
 			# Store metadata for debugging
-			fret_button.set_meta("string", string_index)
+			fret_button.set_meta("string", string_index+1)
 			fret_button.set_meta("fret", fret_index)
 
 			string_row.add_child(fret_button)
@@ -60,3 +84,31 @@ func _on_fret_pressed(fret_button):
 func _on_resize():
 	update_scale_length()
 	draw_fretboard()
+	
+# Function to determine what to display (fret number or note)
+func get_fret_label(string_index, fret_index):
+	if display_mode == "numbers":
+		return str(fret_index)#+1) # Display fret numbers
+	else:
+		return calculate_note_name(string_index, fret_index)	# Display note names
+
+var chromatic_scale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+func calculate_note_name(string_index, fret_index):
+	var open_note = current_tuning[string_index]  # Get open string note
+	var open_note_index = chromatic_scale.find(open_note)  # Find in scale
+	var note_index = (open_note_index + fret_index) % chromatic_scale.size()  # Wrap around scale
+	return chromatic_scale[note_index]  # Return note name
+
+func _on_tuning_selected(index):
+	var tuning_name = tunings.keys()[index]
+	current_tuning = tunings[tuning_name]
+	draw_fretboard()  # Redraw with new tuning
+	
+func _on_toggle_labels():
+	if display_mode == "numbers":
+		display_mode = "notes"
+	else:
+		display_mode = "numbers"
+	
+	draw_fretboard()  # Redraw with new mode
