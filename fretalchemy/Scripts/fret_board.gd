@@ -10,11 +10,14 @@ var fretboard_container
 
 var tunings = {
 	"Standard": ["E", "A", "D", "G", "B", "E"],
-	#"Standard": ["E", "B", "G", "D", "A", "E"],  # Standard tuning (6th to 1st string)
 	"Drop D": ["D", "A", "D", "G", "B", "E"],
-	"Open G": ["D", "G", "D", "G", "B", "D"]
+	"Open G": ["D", "G", "D", "G", "B", "D"],
+	"DADGAD-CelticTuning": ["D","A","D","G","A","D",]
 }
-var current_tuning = tunings["Standard"]  # Default to standard tuning
+var chromatic_scale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+var current_tuning = reverse_tuning(tunings["Standard"])  # Default to standard tuning
+
 var display_mode = "numbers"  # "numbers" or "notes"
 
 
@@ -29,10 +32,12 @@ func _ready():
 	add_child(tuning_menu)
 	for tuning in tunings.keys():
 		tuning_menu.add_item(tuning)
+	tuning_menu.position = Vector2(10, 250)
 	tuning_menu.connect("item_selected", _on_tuning_selected)
 	
 	var toggle_button = Button.new()
 	toggle_button.text = "Switch Labels"
+	toggle_button.position = Vector2(300 ,250)
 	add_child(toggle_button)
 	
 	toggle_button.connect("pressed", _on_toggle_labels)
@@ -49,11 +54,11 @@ func draw_fretboard():
 	for child in fretboard_container.get_children():
 		child.queue_free()
 
-	var previous_fret_x = 0  # Track the previous fret position
-
 	for string_index in range(NUM_STRINGS):
 		var string_row = HBoxContainer.new()
 		fretboard_container.add_child(string_row)
+		
+		var previous_fret_x = 0  # Track the previous fret position
 
 		for fret_index in range(NUM_FRETS+1):
 			var fret_button = Button.new()
@@ -68,19 +73,32 @@ func draw_fretboard():
 			var fret_width = fret_x - previous_fret_x
 			previous_fret_x = fret_x  # Update the last fret position
 
+			# Lock the size of the button
 			fret_button.custom_minimum_size = Vector2(fret_width, STRING_SPACING - 5)
+			fret_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			fret_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+
 			# Store metadata for debugging
 			fret_button.set_meta("string", string_index+1)
 			fret_button.set_meta("fret", fret_index)
+			
 
 			string_row.add_child(fret_button)
 			fret_button.connect("pressed", _on_fret_pressed.bind(fret_button))
 
 func _on_fret_pressed(fret_button):
 	var string = fret_button.get_meta("string")
-	var fret = fret_button.get_meta("fret")
+	var fret = fret_button.get_meta("fret")	
 	print("You pressed string %d, fret %d" % [string, fret])
+	
+	# Change color to indicate it was pressed
+	fret_button.modulate = Color(1, 0, 0)  # Change to red color
 
+	# Optionally, reset the color after some time
+	await get_tree().create_timer(0.5).timeout
+	fret_button.modulate = Color(1, 1, 1)  # Reset to default color
+		
 func _on_resize():
 	update_scale_length()
 	draw_fretboard()
@@ -88,11 +106,9 @@ func _on_resize():
 # Function to determine what to display (fret number or note)
 func get_fret_label(string_index, fret_index):
 	if display_mode == "numbers":
-		return str(fret_index)#+1) # Display fret numbers
+		return str(fret_index) # Display fret numbers
 	else:
 		return calculate_note_name(string_index, fret_index)	# Display note names
-
-var chromatic_scale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 func calculate_note_name(string_index, fret_index):
 	var open_note = current_tuning[string_index]  # Get open string note
@@ -102,7 +118,7 @@ func calculate_note_name(string_index, fret_index):
 
 func _on_tuning_selected(index):
 	var tuning_name = tunings.keys()[index]
-	current_tuning = tunings[tuning_name]
+	current_tuning = reverse_tuning(tunings[tuning_name])
 	draw_fretboard()  # Redraw with new tuning
 	
 func _on_toggle_labels():
@@ -112,3 +128,7 @@ func _on_toggle_labels():
 		display_mode = "numbers"
 	
 	draw_fretboard()  # Redraw with new mode
+	
+func reverse_tuning(tuning):
+	tuning.reverse()
+	return tuning
