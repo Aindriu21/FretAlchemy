@@ -16,12 +16,13 @@ var tunings = {
 }
 var chromatic_scale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
-var current_tuning = reverse_tuning(tunings["Standard"])  # Default to standard tuning
+var current_tuning = tunings["Standard"]  # Default to standard tuning
 
 var display_mode = "numbers"  # "numbers" or "notes"
 
 
 func _ready():
+	reverse_tuning(current_tuning)
 	update_scale_length()
 
 	# Initialize the container for the fretboard
@@ -118,7 +119,8 @@ func calculate_note_name(string_index, fret_index):
 
 func _on_tuning_selected(index):
 	var tuning_name = tunings.keys()[index]
-	current_tuning = reverse_tuning(tunings[tuning_name])
+	current_tuning = tunings[tuning_name]
+	reverse_tuning(current_tuning)
 	draw_fretboard()  # Redraw with new tuning
 	
 func _on_toggle_labels():
@@ -132,3 +134,10 @@ func _on_toggle_labels():
 func reverse_tuning(tuning):
 	tuning.reverse()
 	return tuning
+
+
+func play_note():
+	pass
+	
+func calculate_note_freq():
+	pass
