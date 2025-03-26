@@ -15,13 +15,12 @@ var tunings = {
 	"DADGAD-CelticTuning": ["D","A","D","G","A","D",]
 }
 var chromatic_scale = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-
-var current_tuning = tunings["Standard"]  # Default to standard tuning
-
+var current_tuning
 var display_mode = "numbers"  # "numbers" or "notes"
 
 
 func _ready():
+	current_tuning = tunings["Standard"].duplicate() # Default to standard tuning
 	reverse_tuning(current_tuning)
 	update_scale_length()
 
@@ -79,11 +78,9 @@ func draw_fretboard():
 			fret_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			fret_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-
 			# Store metadata for debugging
 			fret_button.set_meta("string", string_index+1)
 			fret_button.set_meta("fret", fret_index)
-			
 
 			string_row.add_child(fret_button)
 			fret_button.connect("pressed", _on_fret_pressed.bind(fret_button))
@@ -119,8 +116,11 @@ func calculate_note_name(string_index, fret_index):
 
 func _on_tuning_selected(index):
 	var tuning_name = tunings.keys()[index]
-	current_tuning = tunings[tuning_name]
+#	current_tuning = reverse_tuning(tunings[tuning_name])
+	
+	current_tuning = tunings[tuning_name].duplicate() # Default to standard tuning
 	reverse_tuning(current_tuning)
+	
 	draw_fretboard()  # Redraw with new tuning
 	
 func _on_toggle_labels():
