@@ -1,7 +1,8 @@
 extends Node2D
 
-const NUM_STRINGS = 6
-const NUM_FRETS = 22
+const NUM_STRINGS = 6 # Standard # of guitar string
+const NUM_FRETS = 22 # Standard # of frets
+
 const STRING_SPACING = 30  # Adjust for vertical spacing
 const NUT_WIDTH = 0.125  # Adjust as needed for better proportions
 
@@ -83,11 +84,11 @@ func draw_fretboard():
 			fret_button.set_meta("fret", fret_index)
 
 			string_row.add_child(fret_button)
-			fret_button.connect("pressed", _on_fret_pressed.bind(fret_button))
+			fret_button.connect("pressed", _fret_pressed.bind(fret_button))
 
-func _on_fret_pressed(fret_button):
+func _fret_pressed(fret_button):
 	var string = fret_button.get_meta("string")
-	var fret = fret_button.get_meta("fret")	
+	var fret = fret_button.get_meta("fret")
 	print("You pressed string %d, fret %d" % [string, fret])
 	
 	# Change color to indicate it was pressed
@@ -135,6 +136,24 @@ func reverse_tuning(tuning):
 	tuning.reverse()
 	return tuning
 
+func _input(event):
+	#if Input.is_action_just_pressed("fret_pressed"):
+	if Input.is_key_pressed(KEY_Q):
+			var string_pressed = fretboard_container.get_child(4)
+			var fretted_note_pressed = string_pressed.get_child(0)
+			#fret_button.name = "String%d_Fret%d" % [string_index, fret_index]
+			_fret_pressed(fretted_note_pressed)
+	
+			
+#	if event is InputEventKey:
+		#OS.get_keycode_string(event.key_label)
+		#OS.get_keycode_string(event.keycode)
+		#var key = DisplayServer.keyboard_get_keycode_from_physical(event.physical_keycode)
+		
+		#var key = OS.get_keycode_string(event.key_label)
+		#if key == 'a':
+			#var fretted_note = fretboard_container[4][0]
+			#_fret_pressed(fretted_note)
 
 func play_note():
 	pass
